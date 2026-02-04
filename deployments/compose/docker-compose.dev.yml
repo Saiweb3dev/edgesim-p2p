@@ -1,0 +1,24 @@
+services:
+  node1:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      NODE_ID: node-1
+      LISTEN_ADDR: 0.0.0.0:8001
+      PEER_ADDR: node2:8002
+      MESSAGE: hello-from-node-1
+    ports:
+      - "8001:8001"
+
+  node2:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      NODE_ID: node-2
+      LISTEN_ADDR: 0.0.0.0:8002
+      PEER_ADDR: node1:8001
+      MESSAGE: hello-from-node-2
+    ports:
+      - "8002:8002"

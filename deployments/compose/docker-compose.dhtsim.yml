@@ -1,0 +1,5 @@
+services:
+  dhtsim:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.dhtsim

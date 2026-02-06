@@ -5,7 +5,7 @@
 **Author:** [Sai Kumar])  
 **Status:** 🟡 In Review → 🟢 Approved → 🔵 Implemented  
 **Created:** 2026-02-04  
-**Last Updated:** 2026-02-04  
+**Last Updated:** 2026-02-06  
 **Related Docs:** [Architecture Doc], [API Spec]
 
 ---
@@ -262,7 +262,7 @@ Distributed hash table for peer discovery with O(log N) lookup complexity. Uses 
 **Data Structures:**
 
 ```go
-// NodeID is a 160-bit identifier (SHA-256 hash)
+// NodeID is a 160-bit identifier (SHA-256 hash truncated to 160 bits)
 type NodeID [20]byte
 
 // Peer represents a network node
@@ -322,9 +322,8 @@ type Bucket struct {
    1. Find appropriate bucket for P (by XOR distance)
    2. If P already in bucket → move to tail (LRU)
    3. If bucket not full → add P to tail
-   4. If bucket full → ping head (oldest peer)
-       - If head responds → keep head, discard P
-       - If head timeout → replace head with P
+      4. If bucket full → evict head (oldest peer) for now
+         - Future: ping head before eviction to preserve live peers
    ```
 
 **Configuration:**

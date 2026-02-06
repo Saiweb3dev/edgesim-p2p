@@ -4,9 +4,10 @@ services:
       context: ../..
       dockerfile: deployments/docker/Dockerfile.node
     environment:
-      NODE_ID: node-1
       LISTEN_ADDR: 0.0.0.0:8001
       PEER_ADDR: node2:8002
+      ADVERTISE_ADDR: node1:8001
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-1
     ports:
       - "8001:8001"
@@ -16,9 +17,49 @@ services:
       context: ../..
       dockerfile: deployments/docker/Dockerfile.node
     environment:
-      NODE_ID: node-2
       LISTEN_ADDR: 0.0.0.0:8002
-      PEER_ADDR: node1:8001
+      PEER_ADDR: node3:8003
+      ADVERTISE_ADDR: node2:8002
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-2
     ports:
       - "8002:8002"
+
+  node3:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8003
+      PEER_ADDR: node4:8004
+      ADVERTISE_ADDR: node3:8003
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-3
+    ports:
+      - "8003:8003"
+
+  node4:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8004
+      PEER_ADDR: node5:8005
+      ADVERTISE_ADDR: node4:8004
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-4
+    ports:
+      - "8004:8004"
+
+  node5:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8005
+      PEER_ADDR: node1:8001
+      ADVERTISE_ADDR: node5:8005
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-5
+    ports:
+      - "8005:8005"

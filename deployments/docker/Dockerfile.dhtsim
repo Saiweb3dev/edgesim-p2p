@@ -1,0 +1,19 @@
+FROM golang:1.21-alpine AS build
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY cmd/ cmd/
+COPY pkg/ pkg/
+
+RUN go build -o /bin/dhtsim ./cmd/dhtsim
+
+FROM alpine:3.19
+
+WORKDIR /app
+
+COPY --from=build /bin/dhtsim /app/dhtsim
+
+ENTRYPOINT ["/app/dhtsim"]

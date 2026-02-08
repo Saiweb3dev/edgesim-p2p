@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func runTCPServer(ctx context.Context, log *logrus.Entry, listenAddr string, state *nodeState) error {
+func runTCPServer(ctx context.Context, log *logrus.Entry, listenAddr string, state *nodeState, cfg config) error {
 	listener, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		return fmt.Errorf("listen on %s: %w", listenAddr, err)
@@ -35,11 +35,11 @@ func runTCPServer(ctx context.Context, log *logrus.Entry, listenAddr string, sta
 			continue
 		}
 
-		go handleConn(ctx, log, conn, state)
+		go handleConn(ctx, log, conn, state, cfg)
 	}
 }
 
-func handleConn(ctx context.Context, log *logrus.Entry, conn net.Conn, state *nodeState) {
+func handleConn(ctx context.Context, log *logrus.Entry, conn net.Conn, state *nodeState, cfg config) {
 	defer conn.Close()
 	remote := conn.RemoteAddr().String()
 	log.WithField("remote", remote).Info("connection accepted")
@@ -104,6 +104,8 @@ func handleConn(ctx context.Context, log *logrus.Entry, conn net.Conn, state *no
 				log.WithError(err).WithField("remote", remote).Warn("failed to send ack")
 				break
 			}
+		case gossipMsgType:
+			handleGossipMessage(ctx, log, state, cfg, parts)
 		default:
 			log.WithFields(logrus.Fields{
 				"remote":  remote,

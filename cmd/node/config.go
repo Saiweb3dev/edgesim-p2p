@@ -7,20 +7,24 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
 type config struct {
-	nodeID         string
-	listenAddr     string
-	metricsAddr    string
-	advertiseAddr  string
-	peerAddr       string
-	bootstrapAddrs []string
-	message        string
-	retryInterval  time.Duration
-	sensorInterval time.Duration
+	nodeID          string
+	listenAddr      string
+	metricsAddr     string
+	advertiseAddr   string
+	peerAddr        string
+	bootstrapAddrs  []string
+	message         string
+	retryInterval   time.Duration
+	sensorInterval  time.Duration
+	coordinatorAddr string
+	gossipFanout    int
+	gossipTTL       int
 }
 
 func loadConfig() config {
@@ -34,6 +38,9 @@ func loadConfig() config {
 	flag.StringVar(&cfg.message, "message", getenvDefault("MESSAGE", "hello"), "message to send to peer")
 	retry := flag.Duration("retry", 2*time.Second, "retry interval for peer connection")
 	sensorInterval := flag.Duration("sensor-interval", durationFromEnv("SENSOR_INTERVAL", 5*time.Second), "sensor reading interval")
+	flag.StringVar(&cfg.coordinatorAddr, "coordinator", getenvDefault("COORDINATOR_ADDR", ""), "coordinator gossip address")
+	flag.IntVar(&cfg.gossipFanout, "gossip-fanout", intFromEnv("GOSSIP_FANOUT", 3), "gossip fanout per tick")
+	flag.IntVar(&cfg.gossipTTL, "gossip-ttl", intFromEnv("GOSSIP_TTL", 3), "gossip hop limit")
 	flag.Parse()
 
 	cfg.retryInterval = *retry
@@ -86,6 +93,18 @@ func durationFromEnv(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	parsed, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func intFromEnv(key string, fallback int) int {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
 	if err != nil {
 		return fallback
 	}

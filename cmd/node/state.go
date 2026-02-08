@@ -4,6 +4,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/Saiweb3dev/edgesim-p2p/pkg/sensor"
 )
 
 type peerInfo struct {
@@ -13,9 +15,11 @@ type peerInfo struct {
 }
 
 type nodeState struct {
-	mu    sync.RWMutex
-	self  peerInfo
-	peers map[string]peerInfo
+	mu         sync.RWMutex
+	self       peerInfo
+	peers      map[string]peerInfo
+	readings   map[string]sensor.Reading
+	seenGossip map[string]time.Time
 }
 
 func (s *nodeState) upsertPeer(peer peerInfo) {
@@ -47,4 +51,28 @@ func (s *nodeState) peerCount() int {
 	defer s.mu.RUnlock()
 
 	return len(s.peers)
+}
+
+func (s *nodeState) setReading(reading sensor.Reading) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.readings == nil {
+		s.readings = make(map[string]sensor.Reading)
+	}
+	s.readings[reading.NodeID] = reading
+}
+
+func (s *nodeState) shouldProcessGossip(messageID string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.seenGossip == nil {
+		s.seenGossip = make(map[string]time.Time)
+	}
+	if _, ok := s.seenGossip[messageID]; ok {
+		return false
+	}
+	s.seenGossip[messageID] = time.Now()
+	return true
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Saiweb3dev/edgesim-p2p/pkg/dht"
+	"github.com/Saiweb3dev/edgesim-p2p/pkg/gossip"
 	"github.com/Saiweb3dev/edgesim-p2p/pkg/sensor"
 	"github.com/sirupsen/logrus"
 )
@@ -38,6 +39,11 @@ func main() {
 
 	if err := runRegionQuery(readings, log); err != nil {
 		log.WithError(err).Error("region query failed")
+		os.Exit(1)
+	}
+
+	if err := runGossipSimulation(network, log); err != nil {
+		log.WithError(err).Error("gossip simulation failed")
 		os.Exit(1)
 	}
 
@@ -143,6 +149,12 @@ func runRegionQuery(readings []sensor.Reading, log *logrus.Entry) error {
 
 	center := readings[0].Location
 	radiusKm := 10.0
+	api := &QueryAPI{}
+
+	avgTemp, sampleCount, err := api.AverageTemperatureInRadius(readings, center, radiusKm)
+	if err != nil {
+		return err
+	}
 
 	matched := sensor.FilterByRadius(readings, center, radiusKm)
 	log.WithFields(logrus.Fields{
@@ -150,6 +162,8 @@ func runRegionQuery(readings []sensor.Reading, log *logrus.Entry) error {
 		"center_lon": center.Longitude,
 		"radius_km":  radiusKm,
 		"matches":    len(matched),
+		"avg_temp_c": avgTemp,
+		"samples":    sampleCount,
 	}).Info("region query results")
 
 	for _, reading := range matched {
@@ -160,6 +174,50 @@ func runRegionQuery(readings []sensor.Reading, log *logrus.Entry) error {
 		}).Info("sensor in region")
 	}
 
+	return nil
+}
+
+func runGossipSimulation(network *simNetwork, log *logrus.Entry) error {
+	nodes := make([]gossip.Node, 0, len(network.nodes))
+	for _, node := range network.nodes {
+		peer := node.Peer()
+		peers := node.RoutingTable().GetClosestPeers(peer.ID, bucketK)
+		peerIDs := make([]string, 0, len(peers))
+		for _, p := range peers {
+			peerIDs = append(peerIDs, p.Addr)
+		}
+		nodes = append(nodes, gossip.Node{ID: peer.Addr, Peers: peerIDs})
+	}
+
+	if len(nodes) == 0 {
+		return fmt.Errorf("no nodes for gossip")
+	}
+
+	seed := int64(42)
+	fanout := 3
+	maxSteps := 20
+	targetRatio := 0.9
+	tick := 100 * time.Millisecond
+
+	sim := gossip.NewSimulator(seed)
+	result, err := sim.SimulatePropagation(nodes, nodes[0].ID, fanout, targetRatio, maxSteps)
+	if err != nil {
+		return fmt.Errorf("propagation failed: %w", err)
+	}
+
+	duration := time.Duration(result.Steps) * tick
+	log.WithFields(logrus.Fields{
+		"steps":         result.Steps,
+		"duration_ms":   duration.Milliseconds(),
+		"reached_count": result.ReachedCount,
+		"reached_ratio": result.ReachedRatio,
+	}).Info("gossip propagation result")
+
+	if duration > 2*time.Second {
+		return fmt.Errorf("gossip target missed: duration %s", duration)
+	}
+
+	log.Info("gossip working, data reaches 90% of network in <2 seconds")
 	return nil
 }
 

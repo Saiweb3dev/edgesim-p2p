@@ -1,0 +1,21 @@
+FROM golang:1.21-alpine AS build
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY cmd/ cmd/
+COPY pkg/ pkg/
+
+RUN go build -o /bin/coordinator ./cmd/coordinator
+
+FROM alpine:3.19
+
+WORKDIR /app
+
+COPY --from=build /bin/coordinator /app/coordinator
+
+EXPOSE 8080 9000
+
+ENTRYPOINT ["/app/coordinator"]

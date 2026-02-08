@@ -30,7 +30,9 @@ func main() {
 			addr:     cfg.advertiseAddr,
 			lastSeen: time.Now(),
 		},
-		peers: make(map[string]peerInfo),
+		peers:      make(map[string]peerInfo),
+		readings:   make(map[string]sensor.Reading),
+		seenGossip: make(map[string]time.Time),
 	}
 	sensors := newSensorState()
 
@@ -43,7 +45,7 @@ func main() {
 	errCh := make(chan error, 2)
 
 	go func() {
-		if err := runTCPServer(ctx, log, cfg.listenAddr, state); err != nil {
+		if err := runTCPServer(ctx, log, cfg.listenAddr, state, cfg); err != nil {
 			errCh <- err
 		}
 	}()
@@ -74,12 +76,17 @@ func main() {
 		for {
 			reading := generator.Next()
 			sensors.Set(reading)
+			state.setReading(reading)
 			metrics.SetTemperature(cfg.nodeID, reading.TemperatureC)
 			log.WithFields(logrus.Fields{
 				"temperature_c": reading.TemperatureC,
 				"latitude":      reading.Location.Latitude,
 				"longitude":     reading.Location.Longitude,
 			}).Info("sensor reading")
+
+			if err := gossipBroadcast(ctx, log, cfg, state, reading); err != nil {
+				log.WithError(err).Warn("gossip broadcast failed")
+			}
 			select {
 			case <-ctx.Done():
 				return

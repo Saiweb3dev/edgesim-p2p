@@ -11,6 +11,7 @@ docker compose -f deployments/compose/docker-compose.dev.yml up --build
 ```
 
 Open:
+
 - Grafana: http://localhost:3000 (admin/admin)
 - Prometheus: http://localhost:9090
 
@@ -36,8 +37,8 @@ go test ./pkg/dht -bench=BenchmarkIterativeFindNode -benchmem
 
 ## Repository Layout
 
-- cmd/        binaries (node, dhtsim)
-- pkg/        core libraries (dht, gossip, raft, sensor)
+- cmd/ binaries (node, dhtsim)
+- pkg/ core libraries (dht, gossip, raft, sensor)
 - deployments/ docker and compose files
 - monitoring/ Prometheus and Grafana configuration
-- docs/       design documentation
+- docs/ design documentation

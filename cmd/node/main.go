@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Saiweb3dev/edgesim-p2p/pkg/sensor"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,6 +32,7 @@ func main() {
 		},
 		peers: make(map[string]peerInfo),
 	}
+	sensors := newSensorState()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -57,6 +59,27 @@ func main() {
 		defer ticker.Stop()
 		for {
 			metrics.SetRoutingTableSize(cfg.nodeID, state.peerCount())
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+			}
+		}
+	}()
+
+	go func() {
+		generator := sensor.NewGenerator(cfg.nodeID, sensor.LocationFromSeed(cfg.nodeID))
+		ticker := time.NewTicker(cfg.sensorInterval)
+		defer ticker.Stop()
+		for {
+			reading := generator.Next()
+			sensors.Set(reading)
+			metrics.SetTemperature(cfg.nodeID, reading.TemperatureC)
+			log.WithFields(logrus.Fields{
+				"temperature_c": reading.TemperatureC,
+				"latitude":      reading.Location.Latitude,
+				"longitude":     reading.Location.Longitude,
+			}).Info("sensor reading")
 			select {
 			case <-ctx.Done():
 				return

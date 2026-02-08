@@ -20,6 +20,7 @@ type config struct {
 	bootstrapAddrs []string
 	message        string
 	retryInterval  time.Duration
+	sensorInterval time.Duration
 }
 
 func loadConfig() config {
@@ -32,9 +33,11 @@ func loadConfig() config {
 	bootstrap := flag.String("bootstrap", getenvDefault("BOOTSTRAP_ADDRS", ""), "comma-separated bootstrap addrs")
 	flag.StringVar(&cfg.message, "message", getenvDefault("MESSAGE", "hello"), "message to send to peer")
 	retry := flag.Duration("retry", 2*time.Second, "retry interval for peer connection")
+	sensorInterval := flag.Duration("sensor-interval", durationFromEnv("SENSOR_INTERVAL", 5*time.Second), "sensor reading interval")
 	flag.Parse()
 
 	cfg.retryInterval = *retry
+	cfg.sensorInterval = *sensorInterval
 	if cfg.nodeID == "" {
 		generated, err := generateNodeID()
 		if err != nil {
@@ -75,4 +78,16 @@ func getenvDefault(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func durationFromEnv(key string, fallback time.Duration) time.Duration {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }

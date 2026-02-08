@@ -13,6 +13,7 @@ import (
 type nodeMetrics struct {
 	lookupLatency    *prometheus.HistogramVec
 	routingTableSize *prometheus.GaugeVec
+	temperatureC     *prometheus.GaugeVec
 }
 
 func newNodeMetrics(nodeID string) *nodeMetrics {
@@ -27,8 +28,13 @@ func newNodeMetrics(nodeID string) *nodeMetrics {
 		Help: "Number of peers known to the node",
 	}, []string{"node_id"})
 
-	prometheus.MustRegister(lookupLatency, routingTableSize)
-	return &nodeMetrics{lookupLatency: lookupLatency, routingTableSize: routingTableSize}
+	temperatureC := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "edgesim_sensor_temperature_celsius",
+		Help: "Current temperature reading in Celsius",
+	}, []string{"node_id"})
+
+	prometheus.MustRegister(lookupLatency, routingTableSize, temperatureC)
+	return &nodeMetrics{lookupLatency: lookupLatency, routingTableSize: routingTableSize, temperatureC: temperatureC}
 }
 
 func (m *nodeMetrics) ObserveLookupLatency(nodeID string, duration time.Duration) {
@@ -43,6 +49,13 @@ func (m *nodeMetrics) SetRoutingTableSize(nodeID string, size int) {
 		return
 	}
 	m.routingTableSize.WithLabelValues(nodeID).Set(float64(size))
+}
+
+func (m *nodeMetrics) SetTemperature(nodeID string, temperatureC float64) {
+	if m == nil {
+		return
+	}
+	m.temperatureC.WithLabelValues(nodeID).Set(temperatureC)
 }
 
 func startMetricsServer(ctx context.Context, log *logrus.Entry, addr string) {

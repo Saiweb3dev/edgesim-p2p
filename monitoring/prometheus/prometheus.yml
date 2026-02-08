@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: edgesim_nodes
+    static_configs:
+      - targets:
+          - node1:9101
+          - node2:9102
+          - node3:9103
+          - node4:9104
+          - node5:9105
+          - node6:9106
+          - node7:9107
+          - node8:9108
+          - node9:9109
+          - node10:9110
+          - node11:9111
+          - node12:9112
+          - node13:9113
+          - node14:9114
+          - node15:9115
+          - node16:9116
+          - node17:9117
+          - node18:9118
+          - node19:9119
+          - node20:9120

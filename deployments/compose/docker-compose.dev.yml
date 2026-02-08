@@ -5,12 +5,14 @@ services:
       dockerfile: deployments/docker/Dockerfile.node
     environment:
       LISTEN_ADDR: 0.0.0.0:8001
+      METRICS_ADDR: 0.0.0.0:9101
       PEER_ADDR: node2:8002
       ADVERTISE_ADDR: node1:8001
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-1
     ports:
       - "8001:8001"
+      - "9101:9101"
 
   node2:
     build:
@@ -18,12 +20,14 @@ services:
       dockerfile: deployments/docker/Dockerfile.node
     environment:
       LISTEN_ADDR: 0.0.0.0:8002
+      METRICS_ADDR: 0.0.0.0:9102
       PEER_ADDR: node3:8003
       ADVERTISE_ADDR: node2:8002
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-2
     ports:
       - "8002:8002"
+      - "9102:9102"
 
   node3:
     build:
@@ -31,12 +35,14 @@ services:
       dockerfile: deployments/docker/Dockerfile.node
     environment:
       LISTEN_ADDR: 0.0.0.0:8003
+      METRICS_ADDR: 0.0.0.0:9103
       PEER_ADDR: node4:8004
       ADVERTISE_ADDR: node3:8003
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-3
     ports:
       - "8003:8003"
+      - "9103:9103"
 
   node4:
     build:
@@ -44,12 +50,14 @@ services:
       dockerfile: deployments/docker/Dockerfile.node
     environment:
       LISTEN_ADDR: 0.0.0.0:8004
+      METRICS_ADDR: 0.0.0.0:9104
       PEER_ADDR: node5:8005
       ADVERTISE_ADDR: node4:8004
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-4
     ports:
       - "8004:8004"
+      - "9104:9104"
 
   node5:
     build:
@@ -57,9 +65,257 @@ services:
       dockerfile: deployments/docker/Dockerfile.node
     environment:
       LISTEN_ADDR: 0.0.0.0:8005
+      METRICS_ADDR: 0.0.0.0:9105
       PEER_ADDR: node1:8001
       ADVERTISE_ADDR: node5:8005
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-5
     ports:
       - "8005:8005"
+      - "9105:9105"
+
+  node6:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8006
+      METRICS_ADDR: 0.0.0.0:9106
+      PEER_ADDR: node7:8007
+      ADVERTISE_ADDR: node6:8006
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-6
+    ports:
+      - "8006:8006"
+      - "9106:9106"
+
+  node7:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8007
+      METRICS_ADDR: 0.0.0.0:9107
+      PEER_ADDR: node8:8008
+      ADVERTISE_ADDR: node7:8007
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-7
+    ports:
+      - "8007:8007"
+      - "9107:9107"
+
+  node8:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8008
+      METRICS_ADDR: 0.0.0.0:9108
+      PEER_ADDR: node9:8009
+      ADVERTISE_ADDR: node8:8008
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-8
+    ports:
+      - "8008:8008"
+      - "9108:9108"
+
+  node9:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8009
+      METRICS_ADDR: 0.0.0.0:9109
+      PEER_ADDR: node10:8010
+      ADVERTISE_ADDR: node9:8009
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-9
+    ports:
+      - "8009:8009"
+      - "9109:9109"
+
+  node10:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8010
+      METRICS_ADDR: 0.0.0.0:9110
+      PEER_ADDR: node11:8011
+      ADVERTISE_ADDR: node10:8010
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-10
+    ports:
+      - "8010:8010"
+      - "9110:9110"
+
+  node11:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8011
+      METRICS_ADDR: 0.0.0.0:9111
+      PEER_ADDR: node12:8012
+      ADVERTISE_ADDR: node11:8011
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-11
+    ports:
+      - "8011:8011"
+      - "9111:9111"
+
+  node12:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8012
+      METRICS_ADDR: 0.0.0.0:9112
+      PEER_ADDR: node13:8013
+      ADVERTISE_ADDR: node12:8012
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-12
+    ports:
+      - "8012:8012"
+      - "9112:9112"
+
+  node13:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8013
+      METRICS_ADDR: 0.0.0.0:9113
+      PEER_ADDR: node14:8014
+      ADVERTISE_ADDR: node13:8013
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-13
+    ports:
+      - "8013:8013"
+      - "9113:9113"
+
+  node14:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8014
+      METRICS_ADDR: 0.0.0.0:9114
+      PEER_ADDR: node15:8015
+      ADVERTISE_ADDR: node14:8014
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-14
+    ports:
+      - "8014:8014"
+      - "9114:9114"
+
+  node15:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8015
+      METRICS_ADDR: 0.0.0.0:9115
+      PEER_ADDR: node16:8016
+      ADVERTISE_ADDR: node15:8015
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-15
+    ports:
+      - "8015:8015"
+      - "9115:9115"
+
+  node16:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8016
+      METRICS_ADDR: 0.0.0.0:9116
+      PEER_ADDR: node17:8017
+      ADVERTISE_ADDR: node16:8016
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-16
+    ports:
+      - "8016:8016"
+      - "9116:9116"
+
+  node17:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8017
+      METRICS_ADDR: 0.0.0.0:9117
+      PEER_ADDR: node18:8018
+      ADVERTISE_ADDR: node17:8017
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-17
+    ports:
+      - "8017:8017"
+      - "9117:9117"
+
+  node18:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8018
+      METRICS_ADDR: 0.0.0.0:9118
+      PEER_ADDR: node19:8019
+      ADVERTISE_ADDR: node18:8018
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-18
+    ports:
+      - "8018:8018"
+      - "9118:9118"
+
+  node19:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8019
+      METRICS_ADDR: 0.0.0.0:9119
+      PEER_ADDR: node20:8020
+      ADVERTISE_ADDR: node19:8019
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-19
+    ports:
+      - "8019:8019"
+      - "9119:9119"
+
+  node20:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.node
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8020
+      METRICS_ADDR: 0.0.0.0:9120
+      PEER_ADDR: node1:8001
+      ADVERTISE_ADDR: node20:8020
+      BOOTSTRAP_ADDRS: node1:8001,node2:8002
+      MESSAGE: hello-from-node-20
+    ports:
+      - "8020:8020"
+      - "9120:9120"
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ../../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ../../monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ../../monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ../../monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    ports:
+      - "3000:3000"

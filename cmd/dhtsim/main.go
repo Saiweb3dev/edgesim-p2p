@@ -30,8 +30,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := verifySensorQueries(ctx, network, log); err != nil {
+	readings, err := verifySensorQueries(ctx, network, log)
+	if err != nil {
 		log.WithError(err).Error("sensor query failed")
+		os.Exit(1)
+	}
+
+	if err := runRegionQuery(readings, log); err != nil {
+		log.WithError(err).Error("region query failed")
 		os.Exit(1)
 	}
 
@@ -93,30 +99,33 @@ func publishSensorReadings(ctx context.Context, network *simNetwork, log *logrus
 	return nil
 }
 
-func verifySensorQueries(ctx context.Context, network *simNetwork, log *logrus.Entry) error {
+func verifySensorQueries(ctx context.Context, network *simNetwork, log *logrus.Entry) ([]sensor.Reading, error) {
 	var anchor *dht.Node
 	for _, node := range network.nodes {
 		anchor = node
 		break
 	}
 	if anchor == nil {
-		return fmt.Errorf("no nodes in network")
+		return nil, fmt.Errorf("no nodes in network")
 	}
+
+	readings := make([]sensor.Reading, 0, len(network.nodes))
 
 	for _, node := range network.nodes {
 		peer := node.Peer()
 		key := sensorKey(peer.Addr)
 		value, _, err := dht.IterativeFindValue(ctx, anchor.RoutingTable(), network.findValue, key, dht.FindNodeOptions{K: bucketK, Alpha: 3, MaxRounds: 20})
 		if err != nil {
-			return fmt.Errorf("find value failed: %w", err)
+			return nil, fmt.Errorf("find value failed: %w", err)
 		}
 		reading, err := sensor.DecodeReading(value)
 		if err != nil {
-			return fmt.Errorf("decode reading: %w", err)
+			return nil, fmt.Errorf("decode reading: %w", err)
 		}
 		if reading.NodeID != peer.Addr {
-			return fmt.Errorf("unexpected reading node id: %s", reading.NodeID)
+			return nil, fmt.Errorf("unexpected reading node id: %s", reading.NodeID)
 		}
+		readings = append(readings, reading)
 
 		log.WithFields(logrus.Fields{
 			"node_id":       reading.NodeID,
@@ -124,6 +133,33 @@ func verifySensorQueries(ctx context.Context, network *simNetwork, log *logrus.E
 			"timestamp":     reading.Timestamp.Format(time.RFC3339),
 		}).Info("sensor reading queried")
 	}
+	return readings, nil
+}
+
+func runRegionQuery(readings []sensor.Reading, log *logrus.Entry) error {
+	if len(readings) == 0 {
+		return fmt.Errorf("no readings to query")
+	}
+
+	center := readings[0].Location
+	radiusKm := 10.0
+
+	matched := sensor.FilterByRadius(readings, center, radiusKm)
+	log.WithFields(logrus.Fields{
+		"center_lat": center.Latitude,
+		"center_lon": center.Longitude,
+		"radius_km":  radiusKm,
+		"matches":    len(matched),
+	}).Info("region query results")
+
+	for _, reading := range matched {
+		log.WithFields(logrus.Fields{
+			"node_id":       reading.NodeID,
+			"temperature_c": reading.TemperatureC,
+			"distance_km":   sensor.DistanceKm(center, reading.Location),
+		}).Info("sensor in region")
+	}
+
 	return nil
 }
 

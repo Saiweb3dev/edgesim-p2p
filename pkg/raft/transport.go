@@ -38,6 +38,13 @@ func (t *MemoryTransport) Register(node *Node) error {
 	return nil
 }
 
+// Unregister removes the node from the transport, simulating a node failure.
+func (t *MemoryTransport) Unregister(nodeID string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	delete(t.nodes, nodeID)
+}
+
 // RequestVote routes the vote request to the target node.
 func (t *MemoryTransport) RequestVote(ctx context.Context, targetID string, req RequestVoteRequest) (RequestVoteResponse, error) {
 	node, err := t.lookup(targetID)

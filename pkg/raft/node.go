@@ -12,26 +12,26 @@ import (
 
 // Config controls a node's election behavior.
 type Config struct {
-	ID                   string
-	Peers                []string
-	Transport            Transport
-	Logger               *logrus.Entry
-	Rand                 *rand.Rand
-	ElectionTimeoutMin   time.Duration
-	ElectionTimeoutMax   time.Duration
-	HeartbeatInterval    time.Duration
-	RPCTimeout           time.Duration
+	ID                 string
+	Peers              []string
+	Transport          Transport
+	Logger             *logrus.Entry
+	Rand               *rand.Rand
+	ElectionTimeoutMin time.Duration
+	ElectionTimeoutMax time.Duration
+	HeartbeatInterval  time.Duration
+	RPCTimeout         time.Duration
 }
 
 // Node implements the Raft leader election state machine.
 type Node struct {
-	mu         sync.Mutex
-	timerMu    sync.Mutex
-	id         string
-	peers      []string
-	transport  Transport
-	logger     *logrus.Entry
-	rng        *rand.Rand
+	mu        sync.Mutex
+	timerMu   sync.Mutex
+	id        string
+	peers     []string
+	transport Transport
+	logger    *logrus.Entry
+	rng       *rand.Rand
 
 	currentTerm uint64
 	votedFor    string
@@ -40,8 +40,8 @@ type Node struct {
 
 	electionMin time.Duration
 	electionMax time.Duration
-	heartbeat    time.Duration
-	rpcTimeout   time.Duration
+	heartbeat   time.Duration
+	rpcTimeout  time.Duration
 
 	electionTimer *time.Timer
 }

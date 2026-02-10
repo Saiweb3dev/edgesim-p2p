@@ -400,10 +400,10 @@ type RaftState struct {
        → Start new election
    ```
 
-      Timeout reset rules:
-      - Reset on valid heartbeat (`AppendEntries`) from a leader in current or higher term.
-      - Reset on granting a vote to a candidate.
-      - Randomize each timeout to reduce split votes.
+   Timeout reset rules:
+   - Reset on valid heartbeat (`AppendEntries`) from a leader in current or higher term.
+   - Reset on granting a vote to a candidate.
+   - Randomize each timeout to reduce split votes.
 
 2. **Log Replication:**
 

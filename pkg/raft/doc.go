@@ -6,17 +6,17 @@
 //
 // Basic usage:
 //
-// 	transport := raft.NewMemoryTransport()
-// 	node, err := raft.NewNode(raft.Config{
-// 		ID:                "coord-1",
-// 		Peers:             []string{"coord-2", "coord-3"},
-// 		Transport:         transport,
-// 		ElectionTimeoutMin: 150 * time.Millisecond,
-// 		ElectionTimeoutMax: 300 * time.Millisecond,
-// 		HeartbeatInterval:  50 * time.Millisecond,
-// 	})
-// 	if err != nil {
-// 		// handle error
-// 	}
-// 	go func() { _ = node.Run(context.Background()) }()
+//	transport := raft.NewMemoryTransport()
+//	node, err := raft.NewNode(raft.Config{
+//		ID:                "coord-1",
+//		Peers:             []string{"coord-2", "coord-3"},
+//		Transport:         transport,
+//		ElectionTimeoutMin: 150 * time.Millisecond,
+//		ElectionTimeoutMax: 300 * time.Millisecond,
+//		HeartbeatInterval:  50 * time.Millisecond,
+//	})
+//	if err != nil {
+//		// handle error
+//	}
+//	go func() { _ = node.Run(context.Background()) }()
 package raft

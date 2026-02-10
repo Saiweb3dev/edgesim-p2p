@@ -27,7 +27,7 @@ func (t *tcpTransport) RequestVote(ctx context.Context, targetID string, req raf
 	}
 
 	reqEnvelope := raftEnvelope{
-		Type:       rpcRequestVote,
+		Type:        rpcRequestVote,
 		RequestVote: &req,
 	}
 	var resp raft.RequestVoteResponse

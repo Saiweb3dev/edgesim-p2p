@@ -34,15 +34,15 @@ type Node struct {
 	logger    *logrus.Entry
 	rng       *rand.Rand
 
-	currentTerm uint64
-	votedFor    string
-	leaderID    string
-	state       State
-	log         []LogEntry
-	commitIndex uint64
-	lastApplied uint64
+	currentTerm   uint64
+	votedFor      string
+	leaderID      string
+	state         State
+	log           []LogEntry
+	commitIndex   uint64
+	lastApplied   uint64
 	lastHeartbeat time.Time
-	applyFn      func(LogEntry)
+	applyFn       func(LogEntry)
 
 	electionMin time.Duration
 	electionMax time.Duration
@@ -152,18 +152,21 @@ func (n *Node) HandleRequestVote(ctx context.Context, req RequestVoteRequest) Re
 // HandleAppendEntries handles leader heartbeats.
 func (n *Node) HandleAppendEntries(ctx context.Context, req AppendEntriesRequest) AppendEntriesResponse {
 	n.mu.Lock()
-	defer n.mu.Unlock()
 
 	if req.Term < n.currentTerm {
-		return AppendEntriesResponse{Term: n.currentTerm, Success: false}
+		resp := AppendEntriesResponse{Term: n.currentTerm, Success: false}
+		n.mu.Unlock()
+		return resp
 	}
 
 	if req.Term > n.currentTerm {
 		n.stepDownLocked(req.Term, req.LeaderID)
 	}
 
-	if !n.matchPrevLog(req.PrevLogIndex, req.PrevLogTerm) {
-		return AppendEntriesResponse{Term: n.currentTerm, Success: false}
+	if len(req.Entries) > 0 && !n.matchPrevLog(req.PrevLogIndex, req.PrevLogTerm) {
+		resp := AppendEntriesResponse{Term: n.currentTerm, Success: false}
+		n.mu.Unlock()
+		return resp
 	}
 
 	if len(req.Entries) > 0 {
@@ -180,13 +183,17 @@ func (n *Node) HandleAppendEntries(ctx context.Context, req AppendEntriesRequest
 	}
 
 	n.lastHeartbeat = time.Now()
-	n.applyCommittedLocked()
+	entriesToApply := n.collectCommittedLocked()
 
 	n.state = StateFollower
 	n.leaderID = req.LeaderID
 	n.resetElectionTimer()
 
-	return AppendEntriesResponse{Term: n.currentTerm, Success: true}
+	resp := AppendEntriesResponse{Term: n.currentTerm, Success: true}
+	n.mu.Unlock()
+
+	n.applyEntries(entriesToApply)
+	return resp
 }
 
 // State returns the current role of the node.
@@ -273,8 +280,8 @@ func (n *Node) startElection(ctx context.Context) {
 			defer cancel()
 
 			resp, err := n.transport.RequestVote(rpcCtx, peerID, RequestVoteRequest{
-				Term:        term,
-				CandidateID: n.id,
+				Term:         term,
+				CandidateID:  n.id,
 				LastLogIndex: n.lastLogIndex(),
 				LastLogTerm:  n.lastLogTerm(),
 			})
@@ -402,11 +409,13 @@ func (n *Node) Propose(ctx context.Context, command string) error {
 				acks++
 				if acks >= needed {
 					n.mu.Lock()
+					var entriesToApply []LogEntry
 					if n.commitIndex < newIndex {
 						n.commitIndex = newIndex
-						n.applyCommittedLocked()
+						entriesToApply = n.collectCommittedLocked()
 					}
 					n.mu.Unlock()
+					n.applyEntries(entriesToApply)
 					return nil
 				}
 			}
@@ -507,14 +516,24 @@ func (n *Node) appendEntries(prevIndex uint64, entries []LogEntry) {
 	}
 }
 
-func (n *Node) applyCommittedLocked() {
-	if n.applyFn == nil {
-		n.lastApplied = n.commitIndex
+func (n *Node) collectCommittedLocked() []LogEntry {
+	if n.lastApplied >= n.commitIndex {
+		return nil
+	}
+	count := n.commitIndex - n.lastApplied
+	entries := make([]LogEntry, 0, count)
+	for n.lastApplied < n.commitIndex {
+		entries = append(entries, n.log[n.lastApplied])
+		n.lastApplied++
+	}
+	return entries
+}
+
+func (n *Node) applyEntries(entries []LogEntry) {
+	if n.applyFn == nil || len(entries) == 0 {
 		return
 	}
-	for n.lastApplied < n.commitIndex {
-		entry := n.log[n.lastApplied]
-		n.lastApplied++
+	for _, entry := range entries {
 		n.applyFn(entry)
 	}
 }

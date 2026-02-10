@@ -12,8 +12,8 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Saiweb3dev/edgesim-p2p/pkg/raft"
@@ -224,6 +224,31 @@ func handleGossipConn(ctx context.Context, log *logrus.Entry, conn net.Conn, sto
 	if err != nil {
 		log.WithError(err).Warn("gossip reading encode failed")
 		return
+	}
+
+	if raftNode.State() != raft.StateLeader {
+		leaderID := raftNode.LeaderID()
+		if leaderID != "" {
+			leaderAddr, ok := raftPeers[leaderID]
+			if !ok || leaderAddr == "" {
+				log.WithField("leader_id", leaderID).Warn("leader address unknown")
+				return
+			}
+			rpcCtx, cancel := context.WithTimeout(ctx, 300*time.Millisecond)
+			defer cancel()
+			resp, err := sendPropose(rpcCtx, leaderAddr, command)
+			if err != nil {
+				log.WithError(err).WithField("leader_id", leaderID).Warn("forward to leader failed")
+				return
+			}
+			if !resp.OK {
+				log.WithFields(logrus.Fields{
+					"leader_id": leaderID,
+					"error":     resp.Error,
+				}).Warn("leader rejected propose")
+			}
+			return
+		}
 	}
 
 	if err := raftNode.Propose(ctx, command); err == nil {

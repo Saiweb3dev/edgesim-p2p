@@ -5,7 +5,7 @@
 **Author:** [Sai Kumar])  
 **Status:** 🟡 In Review → 🟢 Approved → 🔵 Implemented  
 **Created:** 2026-02-04  
-**Last Updated:** 2026-02-06  
+**Last Updated:** 2026-02-10  
 **Related Docs:** [Architecture Doc], [API Spec]
 
 ---
@@ -360,33 +360,30 @@ Leader-based consensus for coordinator cluster. Ensures all coordinators agree o
    - Becomes leader if majority votes
    - Reverts to follower if election fails
 
-**State Machine:**
+**Coordinator Architecture (V1):**
+
+- **Coordinator Node:** Runs the Raft election state machine and exposes leader status to the query API.
+- **Transport Layer:** Abstracted RPC interface for `RequestVote` and `AppendEntries` heartbeats.
+- **Timing Loop:** Randomized election timeout per node, plus periodic leader heartbeats.
+- **State Store:** In-memory (term, vote, role, leader ID). Log replication is deferred to the next milestone.
+
+**Election State Machine (V1):**
 
 ```go
 type RaftState struct {
-    // Persistent state (survive crashes)
-    currentTerm int
-    votedFor    *NodeID
-    log         []LogEntry
+   // Persistent state (survive crashes)
+   currentTerm uint64
+   votedFor    string
 
-    // Volatile state (all nodes)
-    commitIndex int
-    lastApplied int
-
-    // Volatile state (leaders only)
-    nextIndex   map[NodeID]int
-    matchIndex  map[NodeID]int
-}
-
-type LogEntry struct {
-    Term    int
-    Command Command  // Cluster state change
+   // Volatile state (all nodes)
+   role     Role   // follower | candidate | leader
+   leaderID string
 }
 ```
 
 **Key Operations:**
 
-1. **Leader Election:**
+1. **Leader Election (V1 focus):**
 
    ```
    Follower timeout (no heartbeat) →
@@ -402,6 +399,11 @@ type LogEntry struct {
    Else if timeout:
        → Start new election
    ```
+
+      Timeout reset rules:
+      - Reset on valid heartbeat (`AppendEntries`) from a leader in current or higher term.
+      - Reset on granting a vote to a candidate.
+      - Randomize each timeout to reduce split votes.
 
 2. **Log Replication:**
 
@@ -428,7 +430,7 @@ type LogEntry struct {
 
 **Configuration:**
 
-- Election timeout: 150-300ms (randomized)
+- Election timeout: 150-300ms (randomized per node)
 - Heartbeat interval: 50ms
 - Max entries per AppendEntries: 100
 - Snapshot threshold: 10,000 entries (future)

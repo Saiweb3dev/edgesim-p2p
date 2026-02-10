@@ -16,6 +16,6 @@ WORKDIR /app
 
 COPY --from=build /bin/coordinator /app/coordinator
 
-EXPOSE 8080 9000
+EXPOSE 8080 9000 7000 9200
 
 ENTRYPOINT ["/app/coordinator"]

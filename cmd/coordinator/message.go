@@ -36,3 +36,20 @@ func readFrame(reader *bufio.Reader) ([]byte, error) {
 
 	return payload, nil
 }
+
+// writeFrame writes a length-prefixed frame (4-byte big-endian header + payload).
+func writeFrame(writer *bufio.Writer, payload []byte) error {
+	var header [4]byte
+	binary.BigEndian.PutUint32(header[:], uint32(len(payload)))
+
+	if _, err := writer.Write(header[:]); err != nil {
+		return err
+	}
+	if len(payload) > 0 {
+		if _, err := writer.Write(payload); err != nil {
+			return err
+		}
+	}
+
+	return writer.Flush()
+}

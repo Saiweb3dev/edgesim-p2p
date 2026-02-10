@@ -15,6 +15,7 @@ var (
 	ErrInvalidConfig  = errors.New("invalid raft config")
 	ErrNilTransport   = errors.New("transport is required")
 	ErrInvalidTimeout = errors.New("timeouts must be positive")
+	ErrNotLeader      = errors.New("not leader")
 )
 
 // RequestVoteRequest is sent by candidates to gather votes.
@@ -33,12 +34,22 @@ type RequestVoteResponse struct {
 
 // AppendEntriesRequest is used by leaders as a heartbeat.
 type AppendEntriesRequest struct {
-	Term     uint64
-	LeaderID string
+	Term         uint64
+	LeaderID     string
+	PrevLogIndex uint64
+	PrevLogTerm  uint64
+	Entries      []LogEntry
+	LeaderCommit uint64
 }
 
 // AppendEntriesResponse acknowledges a heartbeat.
 type AppendEntriesResponse struct {
 	Term    uint64
 	Success bool
+}
+
+// LogEntry represents a single replicated command.
+type LogEntry struct {
+	Term    uint64
+	Command string
 }

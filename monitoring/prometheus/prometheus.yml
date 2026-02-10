@@ -25,3 +25,10 @@ scrape_configs:
           - node18:9118
           - node19:9119
           - node20:9120
+
+  - job_name: edgesim_coordinators
+    static_configs:
+      - targets:
+          - coordinator1:9201
+          - coordinator2:9202
+          - coordinator3:9203

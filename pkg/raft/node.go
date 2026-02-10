@@ -21,6 +21,7 @@ type Config struct {
 	ElectionTimeoutMax time.Duration
 	HeartbeatInterval  time.Duration
 	RPCTimeout         time.Duration
+	ApplyFunc          func(LogEntry)
 }
 
 // Node implements the Raft leader election state machine.
@@ -37,6 +38,11 @@ type Node struct {
 	votedFor    string
 	leaderID    string
 	state       State
+	log         []LogEntry
+	commitIndex uint64
+	lastApplied uint64
+	lastHeartbeat time.Time
+	applyFn      func(LogEntry)
 
 	electionMin time.Duration
 	electionMax time.Duration
@@ -89,6 +95,7 @@ func NewNode(cfg Config) (*Node, error) {
 		electionMax: cfg.ElectionTimeoutMax,
 		heartbeat:   cfg.HeartbeatInterval,
 		rpcTimeout:  rpcTimeout,
+		applyFn:     cfg.ApplyFunc,
 	}
 
 	return node, nil
@@ -126,6 +133,10 @@ func (n *Node) HandleRequestVote(ctx context.Context, req RequestVoteRequest) Re
 		n.stepDownLocked(req.Term, "")
 	}
 
+	if !n.isLogUpToDate(req.LastLogIndex, req.LastLogTerm) {
+		return RequestVoteResponse{Term: n.currentTerm, VoteGranted: false}
+	}
+
 	grant := n.votedFor == "" || n.votedFor == req.CandidateID
 	if grant {
 		n.votedFor = req.CandidateID
@@ -151,6 +162,26 @@ func (n *Node) HandleAppendEntries(ctx context.Context, req AppendEntriesRequest
 		n.stepDownLocked(req.Term, req.LeaderID)
 	}
 
+	if !n.matchPrevLog(req.PrevLogIndex, req.PrevLogTerm) {
+		return AppendEntriesResponse{Term: n.currentTerm, Success: false}
+	}
+
+	if len(req.Entries) > 0 {
+		n.appendEntries(req.PrevLogIndex, req.Entries)
+	}
+
+	if req.LeaderCommit > n.commitIndex {
+		lastIndex := n.lastLogIndex()
+		if req.LeaderCommit < lastIndex {
+			n.commitIndex = req.LeaderCommit
+		} else {
+			n.commitIndex = lastIndex
+		}
+	}
+
+	n.lastHeartbeat = time.Now()
+	n.applyCommittedLocked()
+
 	n.state = StateFollower
 	n.leaderID = req.LeaderID
 	n.resetElectionTimer()
@@ -165,11 +196,41 @@ func (n *Node) State() State {
 	return n.state
 }
 
+// CurrentTerm returns the node's current term.
+func (n *Node) CurrentTerm() uint64 {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	return n.currentTerm
+}
+
 // LeaderID returns the current leader identifier, if known.
 func (n *Node) LeaderID() string {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	return n.leaderID
+}
+
+// CommitIndex returns the highest committed log index.
+func (n *Node) CommitIndex() uint64 {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	return n.commitIndex
+}
+
+// LastHeartbeatTime returns the last time a heartbeat was observed.
+func (n *Node) LastHeartbeatTime() time.Time {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	return n.lastHeartbeat
+}
+
+// LogSnapshot returns a copy of the log for tests or diagnostics.
+func (n *Node) LogSnapshot() []LogEntry {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	copyLog := make([]LogEntry, len(n.log))
+	copy(copyLog, n.log)
+	return copyLog
 }
 
 func (n *Node) onElectionTimeout(ctx context.Context) {
@@ -214,9 +275,12 @@ func (n *Node) startElection(ctx context.Context) {
 			resp, err := n.transport.RequestVote(rpcCtx, peerID, RequestVoteRequest{
 				Term:        term,
 				CandidateID: n.id,
+				LastLogIndex: n.lastLogIndex(),
+				LastLogTerm:  n.lastLogTerm(),
 			})
 			if err != nil {
 				n.logger.WithError(err).WithField("peer_id", peerID).Warn("request vote failed")
+				respCh <- RequestVoteResponse{Term: term, VoteGranted: false}
 				return
 			}
 			respCh <- resp
@@ -278,6 +342,80 @@ func (n *Node) becomeLeader(ctx context.Context) {
 	n.sendHeartbeats(ctx)
 }
 
+// Propose appends a command on the leader and replicates it to followers.
+func (n *Node) Propose(ctx context.Context, command string) error {
+	n.mu.Lock()
+	if n.state != StateLeader {
+		n.mu.Unlock()
+		return ErrNotLeader
+	}
+	prevIndex := n.lastLogIndex()
+	prevTerm := n.lastLogTerm()
+	entry := LogEntry{Term: n.currentTerm, Command: command}
+	n.log = append(n.log, entry)
+	newIndex := n.lastLogIndex()
+	n.mu.Unlock()
+
+	acks := 1
+	needed := n.quorum()
+	respCh := make(chan AppendEntriesResponse, len(n.peers))
+
+	for _, peerID := range n.peers {
+		peerID := peerID
+		go func() {
+			rpcCtx, cancel := context.WithTimeout(ctx, n.rpcTimeout)
+			defer cancel()
+
+			resp, err := n.transport.AppendEntries(rpcCtx, peerID, AppendEntriesRequest{
+				Term:         entry.Term,
+				LeaderID:     n.id,
+				PrevLogIndex: prevIndex,
+				PrevLogTerm:  prevTerm,
+				Entries:      []LogEntry{entry},
+				LeaderCommit: n.commitIndex,
+			})
+			if err != nil {
+				n.logger.WithError(err).WithField("peer_id", peerID).Warn("append entries failed")
+				respCh <- AppendEntriesResponse{Term: entry.Term, Success: false}
+				return
+			}
+			respCh <- resp
+		}()
+	}
+
+	responses := 0
+	for responses < len(n.peers) {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case resp := <-respCh:
+			responses++
+			if resp.Term > entry.Term {
+				n.mu.Lock()
+				if resp.Term > n.currentTerm {
+					n.stepDownLocked(resp.Term, "")
+				}
+				n.mu.Unlock()
+				return ErrNotLeader
+			}
+			if resp.Success {
+				acks++
+				if acks >= needed {
+					n.mu.Lock()
+					if n.commitIndex < newIndex {
+						n.commitIndex = newIndex
+						n.applyCommittedLocked()
+					}
+					n.mu.Unlock()
+					return nil
+				}
+			}
+		}
+	}
+
+	return fmt.Errorf("replication failed")
+}
+
 func (n *Node) sendHeartbeats(ctx context.Context) {
 	n.mu.Lock()
 	if n.state != StateLeader {
@@ -285,6 +423,7 @@ func (n *Node) sendHeartbeats(ctx context.Context) {
 		return
 	}
 	term := n.currentTerm
+	n.lastHeartbeat = time.Now()
 	n.mu.Unlock()
 
 	for _, peerID := range n.peers {
@@ -294,8 +433,11 @@ func (n *Node) sendHeartbeats(ctx context.Context) {
 			defer cancel()
 
 			resp, err := n.transport.AppendEntries(rpcCtx, peerID, AppendEntriesRequest{
-				Term:     term,
-				LeaderID: n.id,
+				Term:         term,
+				LeaderID:     n.id,
+				PrevLogIndex: n.lastLogIndex(),
+				PrevLogTerm:  n.lastLogTerm(),
+				LeaderCommit: n.commitIndex,
 			})
 			if err != nil {
 				n.logger.WithError(err).WithField("peer_id", peerID).Warn("heartbeat failed")
@@ -320,6 +462,61 @@ func (n *Node) stepDownLocked(term uint64, leaderID string) {
 	n.votedFor = ""
 	n.state = StateFollower
 	n.leaderID = leaderID
+}
+
+func (n *Node) lastLogIndex() uint64 {
+	return uint64(len(n.log))
+}
+
+func (n *Node) lastLogTerm() uint64 {
+	if len(n.log) == 0 {
+		return 0
+	}
+	return n.log[len(n.log)-1].Term
+}
+
+func (n *Node) isLogUpToDate(candidateIndex uint64, candidateTerm uint64) bool {
+	localTerm := n.lastLogTerm()
+	if candidateTerm != localTerm {
+		return candidateTerm > localTerm
+	}
+	return candidateIndex >= n.lastLogIndex()
+}
+
+func (n *Node) matchPrevLog(prevIndex uint64, prevTerm uint64) bool {
+	if prevIndex == 0 {
+		return true
+	}
+	if prevIndex > uint64(len(n.log)) {
+		return false
+	}
+	return n.log[prevIndex-1].Term == prevTerm
+}
+
+func (n *Node) appendEntries(prevIndex uint64, entries []LogEntry) {
+	for i, entry := range entries {
+		index := int(prevIndex) + i
+		if index < len(n.log) {
+			if n.log[index].Term != entry.Term {
+				n.log = n.log[:index]
+				n.log = append(n.log, entry)
+			}
+			continue
+		}
+		n.log = append(n.log, entry)
+	}
+}
+
+func (n *Node) applyCommittedLocked() {
+	if n.applyFn == nil {
+		n.lastApplied = n.commitIndex
+		return
+	}
+	for n.lastApplied < n.commitIndex {
+		entry := n.log[n.lastApplied]
+		n.lastApplied++
+		n.applyFn(entry)
+	}
 }
 
 func (n *Node) quorum() int {

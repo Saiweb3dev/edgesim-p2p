@@ -10,7 +10,7 @@ services:
       ADVERTISE_ADDR: node1:8001
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-1
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -28,7 +28,7 @@ services:
       ADVERTISE_ADDR: node2:8002
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-2
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -46,7 +46,7 @@ services:
       ADVERTISE_ADDR: node3:8003
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-3
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -64,7 +64,7 @@ services:
       ADVERTISE_ADDR: node4:8004
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-4
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -82,7 +82,7 @@ services:
       ADVERTISE_ADDR: node5:8005
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-5
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -100,7 +100,7 @@ services:
       ADVERTISE_ADDR: node6:8006
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-6
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -118,7 +118,7 @@ services:
       ADVERTISE_ADDR: node7:8007
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-7
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -136,7 +136,7 @@ services:
       ADVERTISE_ADDR: node8:8008
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-8
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -154,7 +154,7 @@ services:
       ADVERTISE_ADDR: node9:8009
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-9
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -172,7 +172,7 @@ services:
       ADVERTISE_ADDR: node10:8010
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-10
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -190,7 +190,7 @@ services:
       ADVERTISE_ADDR: node11:8011
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-11
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -208,7 +208,7 @@ services:
       ADVERTISE_ADDR: node12:8012
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-12
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -226,7 +226,7 @@ services:
       ADVERTISE_ADDR: node13:8013
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-13
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -244,7 +244,7 @@ services:
       ADVERTISE_ADDR: node14:8014
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-14
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -262,7 +262,7 @@ services:
       ADVERTISE_ADDR: node15:8015
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-15
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -280,7 +280,7 @@ services:
       ADVERTISE_ADDR: node16:8016
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-16
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -298,7 +298,7 @@ services:
       ADVERTISE_ADDR: node17:8017
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-17
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -316,7 +316,7 @@ services:
       ADVERTISE_ADDR: node18:8018
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-18
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -334,7 +334,7 @@ services:
       ADVERTISE_ADDR: node19:8019
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-19
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -352,7 +352,7 @@ services:
       ADVERTISE_ADDR: node20:8020
       BOOTSTRAP_ADDRS: node1:8001,node2:8002
       MESSAGE: hello-from-node-20
-      COORDINATOR_ADDR: coordinator:9000
+      COORDINATOR_ADDR: coordinator1:9001
       GOSSIP_FANOUT: "3"
       GOSSIP_TTL: "3"
     ports:
@@ -380,14 +380,56 @@ services:
     ports:
       - "3000:3000"
 
-  coordinator:
+  coordinator1:
     build:
       context: ../..
       dockerfile: deployments/docker/Dockerfile.coordinator
     environment:
-      GOSSIP_ADDR: 0.0.0.0:9000
-      HTTP_ADDR: 0.0.0.0:8080
+      GOSSIP_ADDR: 0.0.0.0:9001
+      HTTP_ADDR: 0.0.0.0:8081
+      METRICS_ADDR: 0.0.0.0:9201
+      RAFT_ID: coord-1
+      RAFT_ADDR: 0.0.0.0:7001
+      RAFT_PEERS: coord-1=coordinator1:7001,coord-2=coordinator2:7002,coord-3=coordinator3:7003
       TOTAL_NODES: 20
       TARGET_RATIO: 0.9
     ports:
-      - "8080:8080"
+      - "8081:8081"
+      - "9201:9201"
+      - "7001:7001"
+
+  coordinator2:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.coordinator
+    environment:
+      GOSSIP_ADDR: 0.0.0.0:9002
+      HTTP_ADDR: 0.0.0.0:8082
+      METRICS_ADDR: 0.0.0.0:9202
+      RAFT_ID: coord-2
+      RAFT_ADDR: 0.0.0.0:7002
+      RAFT_PEERS: coord-1=coordinator1:7001,coord-2=coordinator2:7002,coord-3=coordinator3:7003
+      TOTAL_NODES: 20
+      TARGET_RATIO: 0.9
+    ports:
+      - "8082:8082"
+      - "9202:9202"
+      - "7002:7002"
+
+  coordinator3:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.coordinator
+    environment:
+      GOSSIP_ADDR: 0.0.0.0:9003
+      HTTP_ADDR: 0.0.0.0:8083
+      METRICS_ADDR: 0.0.0.0:9203
+      RAFT_ID: coord-3
+      RAFT_ADDR: 0.0.0.0:7003
+      RAFT_PEERS: coord-1=coordinator1:7001,coord-2=coordinator2:7002,coord-3=coordinator3:7003
+      TOTAL_NODES: 20
+      TARGET_RATIO: 0.9
+    ports:
+      - "8083:8083"
+      - "9203:9203"
+      - "7003:7003"
